@@ -4,18 +4,10 @@ import { Info, Zap, Brain, Video, Image as ImageIcon } from "lucide-react";
 import { FAL_MODELS, FAL_AI_INFO } from "@/lib/models";
 
 interface ModelInfoProps {
-  variant?: "compact" | "detailed";
   className?: string;
 }
 
-export default function ModelInfo({
-  variant = "compact",
-  className = "",
-}: ModelInfoProps) {
-  if (variant === "compact") {
-    return null;
-  }
-
+export default function ModelInfo({ className = "" }: ModelInfoProps) {
   return (
     <div
       className={`bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3 ${className}`}

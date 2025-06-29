@@ -10,9 +10,10 @@ import {
   AlertCircle,
   History,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
-import { TrainedModel, GeneratedContent } from "@/lib/storage";
+import { TrainedModel, GeneratedContent } from "@/lib/client-storage";
 
 interface ImageGenerationProps {
   trainedModel: TrainedModel | null;
@@ -20,6 +21,7 @@ interface ImageGenerationProps {
   setSelectedModel: (model: TrainedModel | null) => void;
   generatedContent: GeneratedContent[];
   addGeneratedContent: (content: GeneratedContent) => void;
+  removeGeneratedContent: (id: string) => void;
 }
 
 interface GenerationConfig {
@@ -33,15 +35,30 @@ interface GenerationConfig {
   type: "image" | "video";
 }
 
+interface GeneratedContentResult {
+  success: boolean;
+  type: "image" | "video";
+  images?: { url: string; content_type?: string }[];
+  video?: {
+    url: string;
+    duration: number;
+    fps: number;
+  };
+  seed: number;
+  prompt: string;
+}
+
 export default function ImageGeneration({
   trainedModel,
   trainedModels,
   setSelectedModel,
   generatedContent,
   addGeneratedContent,
+  removeGeneratedContent,
 }: ImageGenerationProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContentResult, setGeneratedContentResult] = useState<any>(null);
+  const [generatedContentResult, setGeneratedContentResult] =
+    useState<GeneratedContentResult | null>(null);
   const [error, setError] = useState("");
   const [config, setConfig] = useState<GenerationConfig>({
     prompt: "",
@@ -101,7 +118,10 @@ export default function ImageGeneration({
       const newGeneratedContent: GeneratedContent = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         type: config.type,
-        url: config.type === "image" ? data.image : data.video,
+        url:
+          config.type === "image"
+            ? data.images?.[0]?.url || ""
+            : data.video?.url || "",
         prompt: config.prompt,
         negativePrompt: config.negativePrompt,
         config: {
@@ -113,7 +133,10 @@ export default function ImageGeneration({
         },
         modelId: trainedModel.modelId,
         createdAt: new Date().toISOString(),
-        filename: config.type === "image" ? "generated-image.png" : "generated-video.mp4",
+        filename:
+          config.type === "image"
+            ? "generated-image.png"
+            : "generated-video.mp4",
       };
 
       addGeneratedContent(newGeneratedContent);
@@ -143,7 +166,7 @@ export default function ImageGeneration({
           </h2>
           <p className="text-yellow-200">
             You need to train a LoRA model first before you can generate
-            content. Go to the "Train Model" tab to get started.
+            content. Go to the &quot;Train Model&quot; tab to get started.
           </p>
         </div>
       </div>
@@ -155,8 +178,8 @@ export default function ImageGeneration({
       <div className="text-center space-y-4">
         <h2 className="text-2xl font-bold text-white">Generate Content</h2>
         <p className="text-gray-300">
-          Use your trained model "{trainedModel.modelName}" to generate images
-          and videos.
+          Use your trained model &quot;{trainedModel.modelName}&quot; to
+          generate images and videos.
         </p>
         <p className="text-xs text-blue-300">
           Powered by{" "}
@@ -220,27 +243,57 @@ export default function ImageGeneration({
             <span className="text-white font-medium">Generation History</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {generatedContent.slice(-6).reverse().map((content) => (
-              <div key={content.id} className="bg-gray-700/50 rounded-lg p-3">
-                {content.type === "image" ? (
-                  <img
-                    src={content.url}
-                    alt="Generated content"
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                ) : (
-                  <video
-                    src={content.url}
-                    className="w-full h-32 object-cover rounded mb-2"
-                    muted
-                  />
-                )}
-                <div className="text-xs text-gray-300 truncate">{content.prompt}</div>
-                <div className="text-xs text-gray-500">
-                  {new Date(content.createdAt).toLocaleDateString()}
+            {generatedContent
+              .slice(-6)
+              .reverse()
+              .map((content) => (
+                <div key={content.id} className="bg-gray-700/50 rounded-lg p-3">
+                  {content.type === "image" ? (
+                    content.url ? (
+                      <img
+                        src={content.url}
+                        alt="Generated content"
+                        className="w-full h-32 object-cover rounded mb-2"
+                      />
+                    ) : (
+                      <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">
+                          No image available
+                        </span>
+                      </div>
+                    )
+                  ) : content.url ? (
+                    <video
+                      src={content.url}
+                      className="w-full h-32 object-cover rounded mb-2"
+                      muted
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-600 rounded mb-2 flex items-center justify-center">
+                      <span className="text-gray-400 text-xs">
+                        No video available
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-xs text-gray-300 truncate">
+                        {content.prompt}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(content.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeGeneratedContent(content.id)}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                      title="Delete this generated image"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
@@ -431,19 +484,27 @@ export default function ImageGeneration({
           <div className="space-y-4">
             {config.type === "image" ? (
               <div className="text-center">
-                <img
-                  src={generatedContentResult.image}
-                  alt="Generated image"
-                  className="max-w-full h-auto rounded-lg border border-gray-600"
-                />
+                {generatedContentResult.images?.[0]?.url ? (
+                  <img
+                    src={generatedContentResult.images[0].url}
+                    alt="Generated image"
+                    className="max-w-full h-auto rounded-lg border border-gray-600"
+                  />
+                ) : (
+                  <div className="text-red-400 text-sm font-medium mt-2">
+                    No image was returned by the backend. Please try again or
+                    check the logs.
+                  </div>
+                )}
                 <button
                   onClick={() =>
                     downloadContent(
-                      generatedContentResult.image,
+                      generatedContentResult.images?.[0]?.url || "",
                       "generated-image.png"
                     )
                   }
                   className={`mt-4 flex items-center justify-center space-x-2 mx-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer`}
+                  disabled={!generatedContentResult.images?.[0]?.url}
                 >
                   <Download size={16} />
                   <span>Download Image</span>
@@ -451,19 +512,27 @@ export default function ImageGeneration({
               </div>
             ) : (
               <div className="text-center">
-                <video
-                  src={generatedContentResult.video}
-                  controls
-                  className="max-w-full h-auto rounded-lg border border-gray-600"
-                />
+                {generatedContentResult.video?.url ? (
+                  <video
+                    src={generatedContentResult.video.url}
+                    controls
+                    className="max-w-full h-auto rounded-lg border border-gray-600"
+                  />
+                ) : (
+                  <div className="text-red-400 text-sm font-medium mt-2">
+                    No video was returned by the backend. Please try again or
+                    check the logs.
+                  </div>
+                )}
                 <button
                   onClick={() =>
                     downloadContent(
-                      generatedContentResult.video,
+                      generatedContentResult.video?.url || "",
                       "generated-video.mp4"
                     )
                   }
                   className={`mt-4 flex items-center justify-center space-x-2 mx-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer`}
+                  disabled={!generatedContentResult.video?.url}
                 >
                   <Download size={16} />
                   <span>Download Video</span>

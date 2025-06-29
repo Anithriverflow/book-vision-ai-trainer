@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, X, Plus, Image as ImageIcon } from "lucide-react";
-import { FAL_MODELS } from "@/lib/models";
-import { TrainingDataItem } from "@/lib/storage";
+import { Upload, Trash2 } from "lucide-react";
+import { TrainingDataItem } from "@/lib/client-storage";
 
 interface DataPreparationProps {
   trainingData: TrainingDataItem[];
@@ -23,35 +22,39 @@ export default function DataPreparation({
 
     setIsUploading(true);
 
+    // Process all files and create new items
+    const newItems: TrainingDataItem[] = [];
+
     Array.from(files).forEach((file) => {
       if (file.type.startsWith("image/")) {
-        const imageUrl = URL.createObjectURL(file);
-        const newItem: TrainingDataItem = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          image: file,
-          imageUrl,
-          description: "",
-          characterName: "",
-          sceneDescription: "",
-          styleDescription: "",
-        };
+        // Convert file to base64 data URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          const newItem: TrainingDataItem = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            image: file,
+            imageUrl,
+            description: "",
+          };
 
-        setTrainingData([...trainingData, newItem]);
+          newItems.push(newItem);
+
+          // If this is the last file, update the training data
+          if (
+            newItems.length ===
+            Array.from(files).filter((f) => f.type.startsWith("image/")).length
+          ) {
+            setTrainingData([...trainingData, ...newItems]);
+            setIsUploading(false);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }
+        };
+        reader.readAsDataURL(file);
       }
     });
-
-    setIsUploading(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const removeItem = (id: string) => {
-    const item = trainingData.find((item) => item.id === id);
-    if (item) {
-      URL.revokeObjectURL(item.imageUrl);
-    }
-    setTrainingData(trainingData.filter((item) => item.id !== id));
   };
 
   const updateItem = (
@@ -66,9 +69,9 @@ export default function DataPreparation({
     );
   };
 
-  const descriptionTemplate = `Character: [Describe the character's appearance, clothing, expressions, pose]
-Scene: [Describe the setting, lighting, atmosphere, background]
-Style: [Describe the art style, color palette, mood, artistic technique]`;
+  const deleteItem = (id: string) => {
+    setTrainingData(trainingData.filter((item) => item.id !== id));
+  };
 
   return (
     <div className="space-y-6">
@@ -105,31 +108,6 @@ Style: [Describe the art style, color palette, mood, artistic technique]`;
         </p>
       </div>
 
-      {/* Description Template */}
-      <div className="bg-blue-900/20 border border-blue-600 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-blue-300 mb-2">
-          Description Template
-        </h3>
-        <p className="text-gray-300 text-sm mb-3">
-          Use this template for optimal LoRA training results with Flux LoRA
-          Fast Training:
-        </p>
-        <pre className="text-sm text-gray-200 bg-gray-800 p-3 rounded border overflow-auto">
-          {descriptionTemplate}
-        </pre>
-        <p className="text-xs text-blue-200 mt-2">
-          Optimized for{" "}
-          <a
-            href={FAL_MODELS.FLUX_LORA_FAST_TRAINING.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium hover:text-blue-100 transition-colors"
-          >
-            {FAL_MODELS.FLUX_LORA_FAST_TRAINING.endpoint}
-          </a>
-        </p>
-      </div>
-
       {/* Training Data List */}
       {trainingData.length > 0 && (
         <div className="space-y-4">
@@ -142,83 +120,47 @@ Style: [Describe the art style, color palette, mood, artistic technique]`;
                 key={item.id}
                 className="bg-gray-800/50 border border-gray-700 rounded-lg p-4"
               >
-                <div className="flex space-x-4">
-                  <div className="flex-shrink-0">
+                {/* Item Header with Delete Button */}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center space-x-2">
                     <img
                       src={item.imageUrl}
                       alt="Training image"
-                      className="w-24 h-24 object-cover rounded border border-gray-600"
+                      className="w-12 h-12 object-cover rounded border border-gray-600"
                     />
+                    <span className="text-sm text-gray-400">
+                      {item.image.name}
+                    </span>
                   </div>
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    title="Delete this training image"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </button>
+                </div>
 
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Character Name
-                      </label>
-                      <input
-                        type="text"
-                        value={item.characterName}
-                        onChange={(e) =>
-                          updateItem(item.id, "characterName", e.target.value)
-                        }
-                        placeholder="e.g., Ye Wenjie, Luo Ji"
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Character Description
-                      </label>
-                      <textarea
-                        value={item.description}
-                        onChange={(e) =>
-                          updateItem(item.id, "description", e.target.value)
-                        }
-                        placeholder="Describe the character's appearance, clothing, expressions, pose..."
-                        rows={2}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Scene Description
-                      </label>
-                      <textarea
-                        value={item.sceneDescription}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "sceneDescription",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Describe the setting, lighting, atmosphere, background..."
-                        rows={2}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Style Description
-                      </label>
-                      <textarea
-                        value={item.styleDescription}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "styleDescription",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Describe the art style, color palette, mood, artistic technique..."
-                        rows={2}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
-                      />
-                    </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Image Description
+                    </label>
+                    <p className="text-xs text-gray-400 mb-1">
+                      Tip: Describe the subject, setting, style, and any
+                      relevant details about the image to help the AI learn
+                      effectively.
+                    </p>
+                    <textarea
+                      value={item.description}
+                      onChange={(e) =>
+                        updateItem(item.id, "description", e.target.value)
+                      }
+                      placeholder="Describe the subject, setting, style, and any relevant details about the image..."
+                      rows={3}
+                      className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                    />
                   </div>
                 </div>
               </div>
@@ -235,16 +177,8 @@ Style: [Describe the art style, color palette, mood, artistic technique]`;
               Data Preparation Progress
             </span>
             <span className="text-sm text-gray-400">
-              {
-                trainingData.filter(
-                  (item) =>
-                    item.description &&
-                    item.characterName &&
-                    item.sceneDescription &&
-                    item.styleDescription
-                ).length
-              }
-              /{trainingData.length} complete
+              {trainingData.filter((item) => item.description).length}/
+              {trainingData.length} complete
             </span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
@@ -252,13 +186,7 @@ Style: [Describe the art style, color palette, mood, artistic technique]`;
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{
                 width: `${
-                  (trainingData.filter(
-                    (item) =>
-                      item.description &&
-                      item.characterName &&
-                      item.sceneDescription &&
-                      item.styleDescription
-                  ).length /
+                  (trainingData.filter((item) => item.description).length /
                     Math.max(trainingData.length, 1)) *
                   100
                 }%`,

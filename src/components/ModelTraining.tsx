@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Brain, Play, Clock, CheckCircle, AlertCircle, History } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Brain,
+  CheckCircle,
+  AlertCircle,
+  History,
+  Loader2,
+  Download,
+  Plus,
+} from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
-import { TrainingDataItem, TrainedModel } from "@/lib/storage";
+import { TrainingDataItem, TrainedModel, ClientStorage } from "@/lib/client-storage";
 
 interface ModelTrainingProps {
   trainingData: TrainingDataItem[];
   setTrainedModel: (model: TrainedModel) => void;
   trainedModel: TrainedModel | null;
   trainedModels: TrainedModel[];
-  setTrainedModels: (models: TrainedModel[]) => void;
 }
 
 interface TrainingConfig {
@@ -21,17 +28,37 @@ interface TrainingConfig {
   resolution: number;
 }
 
+interface ExternalModelData {
+  modelName: string;
+  modelId: string;
+  loraId: string;
+  configFileUrl: string;
+  loraFileUrl: string;
+  steps: number;
+  createdAt: string;
+}
+
+interface TrainingLog {
+  message?: string;
+  [key: string]: unknown;
+}
+
 export default function ModelTraining({
   trainingData,
   setTrainedModel,
   trainedModel,
   trainedModels,
-  setTrainedModels,
 }: ModelTrainingProps) {
   const [isTraining, setIsTraining] = useState(false);
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState("");
   const [trainingError, setTrainingError] = useState("");
+  const [currentTrainingModel, setCurrentTrainingModel] =
+    useState<TrainedModel | null>(null);
+  const [trainingLogs, setTrainingLogs] = useState<string[]>([]);
+  const [showImportForm, setShowImportForm] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importSuccess, setImportSuccess] = useState("");
   const [config, setConfig] = useState<TrainingConfig>({
     modelName: "",
     epochs: 100,
@@ -39,28 +66,121 @@ export default function ModelTraining({
     batchSize: 1,
     resolution: 512,
   });
+  const [externalModelData, setExternalModelData] = useState<ExternalModelData>(
+    {
+      modelName: "",
+      modelId: "",
+      loraId: "",
+      configFileUrl: "",
+      loraFileUrl: "",
+      steps: 1100,
+      createdAt: new Date().toISOString(),
+    }
+  );
 
   const isDataReady =
     trainingData.length >= 10 &&
     trainingData.every(
-      (item) =>
-        item.description &&
-        item.characterName &&
-        item.sceneDescription &&
-        item.styleDescription
+      (item) => item.description && item.description.trim().length > 0
     );
 
-  const startTraining = async () => {
-    if (!isDataReady || !config.modelName.trim()) {
-      setTrainingError(
-        "Please ensure you have at least 10 images with complete descriptions and a model name."
+  // Check for ongoing training sessions on component mount
+  useEffect(() => {
+    const checkOngoingTraining = async () => {
+      // First check localStorage for current training
+      const savedCurrentTraining = ClientStorage.loadCurrentTraining();
+
+      if (savedCurrentTraining && savedCurrentTraining.status === "training") {
+        setCurrentTrainingModel(savedCurrentTraining);
+        setIsTraining(true);
+        startStatusPolling(savedCurrentTraining.modelId);
+        return;
+      }
+
+      // Fallback: Look for models with "training" status in trainedModels
+      const trainingModels = trainedModels.filter(
+        (model) => model.status === "training"
       );
+
+      if (trainingModels.length > 0) {
+        const latestTrainingModel = trainingModels[trainingModels.length - 1];
+        setCurrentTrainingModel(latestTrainingModel);
+        setIsTraining(true);
+        ClientStorage.saveCurrentTraining(latestTrainingModel);
+        startStatusPolling(latestTrainingModel.modelId);
+      }
+    };
+
+    checkOngoingTraining();
+  }, [trainedModels]);
+
+  const startStatusPolling = (requestId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `/api/training-status?requestId=${requestId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.logs) {
+            setTrainingLogs(
+              data.logs.map((log: TrainingLog) => log.message || log)
+            );
+          }
+
+          if (data.status === "completed") {
+            setIsTraining(false);
+            setCurrentTrainingModel(null);
+            setTrainingProgress(100);
+            ClientStorage.saveCurrentTraining(null);
+            clearInterval(pollInterval);
+
+            // Update the model in the parent component
+            if (data.model) {
+              setTrainedModel(data.model);
+            }
+          } else if (data.status === "training") {
+            // Update progress based on logs or time elapsed
+            const elapsed =
+              Date.now() - new Date(data.model.createdAt).getTime();
+            const estimatedTotal =
+              data.model.trainingConfig.epochs *
+              data.model.trainingConfig.imageCount *
+              2000; // Rough estimate
+            const progress = Math.min((elapsed / estimatedTotal) * 100, 95);
+            setTrainingProgress(progress);
+
+            // Update current training model
+            setCurrentTrainingModel(data.model);
+            ClientStorage.saveCurrentTraining(data.model);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling training status:", error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(pollInterval);
+  };
+
+  const startTraining = async () => {
+    if (!isDataReady) {
+      setTrainingError(
+        "Please ensure you have at least 10 images with complete, non-empty descriptions."
+      );
+      return;
+    }
+    if (!config.modelName.trim()) {
+      setTrainingError("Please enter a model name.");
       return;
     }
 
     setIsTraining(true);
     setTrainingError("");
     setTrainingProgress(0);
+    setTrainingLogs([]);
 
     try {
       // Prepare training data
@@ -73,11 +193,8 @@ export default function ModelTraining({
 
       // Add images and descriptions
       trainingData.forEach((item, index) => {
-        formData.append(`image_${index}`, item.image);
-        formData.append(
-          `description_${index}`,
-          `${item.characterName}: ${item.description}. Scene: ${item.sceneDescription}. Style: ${item.styleDescription}`
-        );
+        formData.append(`image_url_${index}`, item.imageUrl);
+        formData.append(`description_${index}`, item.description);
       });
 
       formData.append("image_count", trainingData.length.toString());
@@ -93,7 +210,7 @@ export default function ModelTraining({
       }
 
       const data = await response.json();
-      
+
       // Create trained model object
       const newTrainedModel: TrainedModel = {
         modelName: config.modelName,
@@ -106,23 +223,17 @@ export default function ModelTraining({
           resolution: config.resolution,
           imageCount: trainingData.length,
         },
-        status: 'completed',
+        status: "training",
         createdAt: new Date().toISOString(),
         trainingData: trainingData,
       };
 
+      setCurrentTrainingModel(newTrainedModel);
       setTrainedModel(newTrainedModel);
+      ClientStorage.saveCurrentTraining(newTrainedModel);
 
-      // Simulate progress updates (in real implementation, this would come from WebSocket or polling)
-      const progressInterval = setInterval(() => {
-        setTrainingProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            return 100;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 2000);
+      // Start polling for status updates
+      startStatusPolling(data.modelId);
 
       // Update estimated time
       const totalTime = config.epochs * trainingData.length * 2; // Rough estimate
@@ -131,9 +242,83 @@ export default function ModelTraining({
       setTrainingError(
         error instanceof Error ? error.message : "Training failed"
       );
-    } finally {
       setIsTraining(false);
     }
+  };
+
+  const importExternalModel = async () => {
+    if (
+      !externalModelData.modelName.trim() ||
+      !externalModelData.modelId.trim() ||
+      !externalModelData.loraFileUrl.trim()
+    ) {
+      setImportError("Model name, Model ID, and LoRA File URL are required");
+      return;
+    }
+
+    try {
+      setImportError("");
+      setImportSuccess("");
+
+      // Create a TrainedModel object from external data
+      const importedModel: TrainedModel = {
+        modelName: externalModelData.modelName,
+        modelId: externalModelData.modelId,
+        loraId: externalModelData.loraFileUrl,
+        trainingConfig: {
+          epochs: 100, // Default values since we don't have the original config
+          learningRate: 0.0001,
+          batchSize: 1,
+          resolution: 512,
+          imageCount: 0, // We don't have the original training data
+        },
+        status: "completed",
+        createdAt: externalModelData.createdAt,
+        trainingData: [], // Empty since we don't have the original training data
+      };
+
+      // Add to models list
+      setTrainedModel(importedModel);
+
+      setImportSuccess(
+        `Model "${externalModelData.modelName}" imported successfully!`
+      );
+      setShowImportForm(false);
+
+      // Reset form
+      setExternalModelData({
+        modelName: "",
+        modelId: "",
+        loraId: "",
+        configFileUrl: "",
+        loraFileUrl: "",
+        steps: 1100,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setImportSuccess(""), 3000);
+    } catch (error) {
+      setImportError(
+        error instanceof Error ? error.message : "Failed to import model"
+      );
+    }
+  };
+
+  const prefillWithUserModel = () => {
+    setExternalModelData({
+      modelName: "My Book Style Model",
+      modelId: "1eba12f7-e71f-429f-a384-e0db65126315",
+      loraId:
+        "https://v3.fal.media/files/penguin/9My4JUI_rFpSxZ1JLBifX_pytorch_lora_weights.safetensors",
+      configFileUrl:
+        "https://v3.fal.media/files/kangaroo/xHIVONLA3TublS0NBEskn_config.json",
+      loraFileUrl:
+        "https://v3.fal.media/files/penguin/9My4JUI_rFpSxZ1JLBifX_pytorch_lora_weights.safetensors",
+      steps: 1100,
+      createdAt: new Date().toISOString(),
+    });
+    setShowImportForm(true);
   };
 
   return (
@@ -157,6 +342,174 @@ export default function ModelTraining({
         </p>
       </div>
 
+      {/* Import External Model */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Download size={20} className="text-green-400" />
+            <span className="text-white font-medium">
+              Import External Model
+            </span>
+          </div>
+          <button
+            onClick={() => setShowImportForm(!showImportForm)}
+            className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Plus size={16} />
+            <span>{showImportForm ? "Cancel" : "Import Model"}</span>
+          </button>
+        </div>
+
+        {showImportForm && (
+          <div className="space-y-4 p-4 bg-gray-700/50 rounded-lg">
+            <p className="text-sm text-gray-300">
+              Import a model that was trained externally on Fal.ai. This will
+              make it available for image generation.
+            </p>
+
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={prefillWithUserModel}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Use My Model Data
+              </button>
+              <span className="text-xs text-gray-400 self-center">
+                (Demo/example only. Paste your own LoRA File URL for real use.)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Model Name *
+                </label>
+                <input
+                  type="text"
+                  value={externalModelData.modelName}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      modelName: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., my-book-style"
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Model ID / Request ID *
+                </label>
+                <input
+                  type="text"
+                  value={externalModelData.modelId}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      modelId: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 1eba12f7-e71f-429f-a384-e0db65126315"
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  LoRA ID
+                </label>
+                <input
+                  type="text"
+                  value={externalModelData.loraId}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      loraId: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., penguin/9My4JUI_rFpSxZ1JLBifX"
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Training Steps
+                </label>
+                <input
+                  type="number"
+                  value={externalModelData.steps}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      steps: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Config File URL
+                </label>
+                <input
+                  type="url"
+                  value={externalModelData.configFileUrl}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      configFileUrl: e.target.value,
+                    })
+                  }
+                  placeholder="https://v3.fal.media/files/kangaroo/xHIVONLA3TublS0NBEskn_config.json"
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  LoRA File URL
+                </label>
+                <input
+                  type="url"
+                  value={externalModelData.loraFileUrl}
+                  onChange={(e) =>
+                    setExternalModelData({
+                      ...externalModelData,
+                      loraFileUrl: e.target.value,
+                    })
+                  }
+                  placeholder="https://v3.fal.media/files/penguin/9My4JUI_rFpSxZ1JLBifX_pytorch_lora_weights.safetensors"
+                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={importExternalModel}
+              className="w-full py-3 px-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold cursor-pointer"
+            >
+              Import Model
+            </button>
+
+            {importError && (
+              <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
+                <p className="text-red-300 text-sm">{importError}</p>
+              </div>
+            )}
+
+            {importSuccess && (
+              <div className="bg-green-900/20 border border-green-600 rounded-lg p-3">
+                <p className="text-green-300 text-sm">{importSuccess}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Training History */}
       {trainedModels.length > 0 && (
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
@@ -165,7 +518,7 @@ export default function ModelTraining({
             <span className="text-white font-medium">Training History</span>
           </div>
           <div className="space-y-2">
-            {trainedModels.map((model, index) => (
+            {trainedModels.map((model) => (
               <div
                 key={model.modelId}
                 className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
@@ -176,12 +529,30 @@ export default function ModelTraining({
                 onClick={() => setTrainedModel(model)}
               >
                 <div>
-                  <div className="text-white font-medium">{model.modelName}</div>
-                  <div className="text-sm text-gray-400">
-                    Trained on {model.trainingConfig.imageCount} images • {new Date(model.createdAt).toLocaleDateString()}
+                  <div className="text-white font-medium">
+                    {model.modelName}
                   </div>
+                  <div className="text-sm text-gray-400">
+                    Trained on {model.trainingConfig.imageCount} images •{" "}
+                    {new Date(model.createdAt).toLocaleDateString()}
+                  </div>
+                  <div className="text-xs text-blue-300 break-all">
+                    LoRA URL: {model.loraId}
+                  </div>
+                  {model.status === "training" && (
+                    <div className="text-sm text-yellow-400 flex items-center space-x-1 mt-1">
+                      <Loader2 size={12} className="animate-spin" />
+                      <span>Training in progress...</span>
+                    </div>
+                  )}
                 </div>
-                <CheckCircle size={16} className="text-green-400" />
+                {model.status === "completed" ? (
+                  <CheckCircle size={16} className="text-green-400" />
+                ) : model.status === "training" ? (
+                  <Loader2 size={16} className="text-yellow-400 animate-spin" />
+                ) : (
+                  <AlertCircle size={16} className="text-red-400" />
+                )}
               </div>
             ))}
           </div>
@@ -213,122 +584,118 @@ export default function ModelTraining({
         <div className="mt-2 text-sm text-gray-400">
           {trainingData.length < 10
             ? `Need ${10 - trainingData.length} more images`
-            : `${
-                trainingData.filter(
-                  (item) =>
-                    item.description &&
-                    item.characterName &&
-                    item.sceneDescription &&
-                    item.styleDescription
-                ).length
-              }/${trainingData.length} images have complete descriptions`}
+            : `${trainingData.filter((item) => item.description).length}/${
+                trainingData.length
+              } images have complete descriptions`}
         </div>
       </div>
 
       {/* Training Configuration */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-white">
-          Training Configuration
-        </h3>
+      {!isTraining && (
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-white">
+            Training Configuration
+          </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Model Name *
-            </label>
-            <input
-              type="text"
-              value={config.modelName}
-              onChange={(e) =>
-                setConfig({ ...config, modelName: e.target.value })
-              }
-              placeholder="e.g., three-body-problem-style"
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Model Name *
+              </label>
+              <input
+                type="text"
+                value={config.modelName}
+                onChange={(e) =>
+                  setConfig({ ...config, modelName: e.target.value })
+                }
+                placeholder="e.g., three-body-problem-style"
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Epochs
+              </label>
+              <input
+                type="number"
+                value={config.epochs}
+                onChange={(e) =>
+                  setConfig({ ...config, epochs: parseInt(e.target.value) })
+                }
+                min="50"
+                max="500"
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Learning Rate
+              </label>
+              <input
+                type="number"
+                value={config.learningRate}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    learningRate: parseFloat(e.target.value),
+                  })
+                }
+                step="0.0001"
+                min="0.0001"
+                max="0.01"
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Batch Size
+              </label>
+              <select
+                value={config.batchSize}
+                onChange={(e) =>
+                  setConfig({ ...config, batchSize: parseInt(e.target.value) })
+                }
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+              >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={4}>4</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Resolution
+              </label>
+              <select
+                value={config.resolution}
+                onChange={(e) =>
+                  setConfig({ ...config, resolution: parseInt(e.target.value) })
+                }
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
+              >
+                <option value={512}>512x512</option>
+                <option value={768}>768x768</option>
+                <option value={1024}>1024x1024</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Epochs
-            </label>
-            <input
-              type="number"
-              value={config.epochs}
-              onChange={(e) =>
-                setConfig({ ...config, epochs: parseInt(e.target.value) })
-              }
-              min="50"
-              max="500"
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Learning Rate
-            </label>
-            <input
-              type="number"
-              value={config.learningRate}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  learningRate: parseFloat(e.target.value),
-                })
-              }
-              step="0.0001"
-              min="0.0001"
-              max="0.01"
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Batch Size
-            </label>
-            <select
-              value={config.batchSize}
-              onChange={(e) =>
-                setConfig({ ...config, batchSize: parseInt(e.target.value) })
-              }
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={4}>4</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Resolution
-            </label>
-            <select
-              value={config.resolution}
-              onChange={(e) =>
-                setConfig({ ...config, resolution: parseInt(e.target.value) })
-              }
-              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-            >
-              <option value={512}>512x512</option>
-              <option value={768}>768x768</option>
-              <option value={1024}>1024x1024</option>
-            </select>
-          </div>
+          <button
+            onClick={startTraining}
+            disabled={!isDataReady}
+            className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-semibold cursor-pointer"
+          >
+            Start Training
+          </button>
         </div>
-
-        <button
-          onClick={startTraining}
-          disabled={!isDataReady || isTraining}
-          className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-semibold cursor-pointer"
-        >
-          {isTraining ? "Training..." : "Start Training"}
-        </button>
-      </div>
+      )}
 
       {/* Training Progress */}
-      {isTraining && (
+      {isTraining && currentTrainingModel && (
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
           <h3 className="text-lg font-semibold text-white">
             Training Progress
@@ -349,14 +716,35 @@ export default function ModelTraining({
               />
             </div>
             <div className="text-sm text-gray-400">
-              Estimated time remaining: {estimatedTime}
+              Training model: {currentTrainingModel.modelName}
             </div>
+            {estimatedTime && (
+              <div className="text-sm text-gray-400">
+                Estimated time remaining: {estimatedTime}
+              </div>
+            )}
+
+            {/* Training Logs */}
+            {trainingLogs.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Training Logs
+                </h4>
+                <div className="bg-gray-900 rounded p-3 max-h-32 overflow-y-auto">
+                  {trainingLogs.slice(-5).map((log, index) => (
+                    <div key={index} className="text-xs text-gray-400 mb-1">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Training Results */}
-      {trainedModel && !isTraining && (
+      {trainedModel && trainedModel.status === "completed" && !isTraining && (
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
           <h3 className="text-lg font-semibold text-white">
             Training Complete!
@@ -365,13 +753,15 @@ export default function ModelTraining({
             <div className="flex items-center space-x-2">
               <CheckCircle size={20} className="text-green-400" />
               <span className="text-green-400 font-medium">
-                Model "{trainedModel.modelName}" trained successfully
+                Model &quot;{trainedModel.modelName}&quot; trained successfully
               </span>
             </div>
             <div className="text-sm text-gray-300">
               <p>Model ID: {trainedModel.modelId}</p>
               <p>LoRA ID: {trainedModel.loraId}</p>
-              <p>Created: {new Date(trainedModel.createdAt).toLocaleString()}</p>
+              <p>
+                Created: {new Date(trainedModel.createdAt).toLocaleString()}
+              </p>
             </div>
           </div>
         </div>

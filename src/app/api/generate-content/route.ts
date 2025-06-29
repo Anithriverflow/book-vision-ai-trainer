@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { falInstance } from "@/lib/fal-config";
 
-interface FluxImageResult {
-  images: string[];
-  seed: number;
-}
-
 interface FluxVideoResult {
   video: {
     url: string;
@@ -21,7 +16,6 @@ export async function POST(request: NextRequest) {
 
     const {
       prompt,
-      negativePrompt,
       steps,
       guidanceScale,
       width,
@@ -40,46 +34,75 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === "image") {
-      // Generate image using flux-1-dev with LoRA
-      const result = (await falInstance.run("fal-ai/flux-1-dev", {
-        input: {
-          prompt: prompt,
-          negative_prompt:
-            negativePrompt || "blurry, low quality, distorted, deformed",
-          num_inference_steps: steps || 20,
-          guidance_scale: guidanceScale || 7.5,
-          width: width || 512,
-          height: height || 512,
-          seed: seed === -1 ? undefined : seed,
-          lora_weights: loraId,
-          lora_scale: 0.8,
-          num_images: 1,
-        },
-      })) as unknown as FluxImageResult;
+      // Generate image using flux-lora with LoRA
+      let result;
+      try {
+        result = await falInstance.run("fal-ai/flux-lora", {
+          input: {
+            prompt: prompt,
+            num_inference_steps: steps || 20,
+            guidance_scale: guidanceScale || 7.5,
+            image_size: { width: width || 512, height: height || 512 },
+            seed: seed === -1 ? undefined : seed,
+            loras: [
+              {
+                path: loraId, // This should be a public URL to your LoRA weights
+                scale: 0.8,
+              },
+            ],
+            num_images: 1,
+          },
+        });
+        console.log("Fal image generation result:", JSON.stringify(result));
+      } catch (falError) {
+        console.error("Fal image generation error:", falError);
+        return NextResponse.json(
+          {
+            error: "Fal.ai image generation failed.",
+            details: falError instanceof Error ? falError.message : falError,
+          },
+          { status: 500 }
+        );
+      }
+
+      const falData = result.data;
+
+      if (!falData || !Array.isArray(falData.images) || !falData.images[0]) {
+        console.error(
+          "Fal.ai returned no images or invalid image array:",
+          result
+        );
+        return NextResponse.json(
+          {
+            error: "Fal.ai did not return a valid image.",
+            details: result,
+          },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
         type: "image",
-        images: result.images || [],
-        seed: result.seed,
+        images: falData.images,
+        seed: falData.seed,
         prompt: prompt,
       });
     } else if (type === "video") {
-      // Generate video using flux-1-dev with LoRA
-      const result = (await falInstance.run("fal-ai/flux-1-dev", {
+      // Generate video using flux-lora with LoRA
+      const result = (await falInstance.run("fal-ai/flux-lora", {
         input: {
           prompt: prompt,
-          negative_prompt:
-            negativePrompt || "blurry, low quality, distorted, deformed",
           num_inference_steps: steps || 20,
           guidance_scale: guidanceScale || 7.5,
-          width: width || 512,
-          height: height || 512,
+          image_size: { width: width || 512, height: height || 512 },
           seed: seed === -1 ? undefined : seed,
-          lora_weights: loraId,
-          lora_scale: 0.8,
-          num_frames: 16,
-          fps: 8,
+          loras: [
+            {
+              path: loraId, // This should be a public URL to your LoRA weights
+              scale: 0.8,
+            },
+          ],
         },
       })) as unknown as FluxVideoResult;
 

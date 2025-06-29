@@ -11,7 +11,7 @@ import {
   TrainingDataItem,
   TrainedModel,
   GeneratedContent,
-} from "@/lib/storage";
+} from "@/lib/client-storage";
 
 type TabType = "data" | "training" | "generation";
 
@@ -27,7 +27,7 @@ export default function Home() {
 
   // Load persistent data on component mount
   useEffect(() => {
-    const loadPersistentData = () => {
+    const loadPersistentData = async () => {
       try {
         // Load from localStorage
         const savedTrainingData = ClientStorage.loadTrainingData();
@@ -79,7 +79,7 @@ export default function Home() {
     }
   }, [activeTab, isLoading]);
 
-  const handleSetTrainedModel = (model: TrainedModel) => {
+  const handleSetTrainedModel = async (model: TrainedModel) => {
     setSelectedModel(model);
 
     // Add to models list if not already present
@@ -91,12 +91,21 @@ export default function Home() {
       updatedModels[existingIndex] = model;
       setTrainedModels(updatedModels);
     } else {
-      setTrainedModels([...trainedModels, model]);
+      const updatedModels = [...trainedModels, model];
+      setTrainedModels(updatedModels);
     }
+
+
   };
 
   const handleAddGeneratedContent = (content: GeneratedContent) => {
     setGeneratedContent([...generatedContent, content]);
+  };
+
+  const handleRemoveGeneratedContent = (id: string) => {
+    const updated = generatedContent.filter((item) => item.id !== id);
+    setGeneratedContent(updated);
+    ClientStorage.saveGeneratedContent(updated);
   };
 
   const clearAllData = () => {
@@ -172,16 +181,16 @@ export default function Home() {
           </p>
           <div className="mt-3 flex space-x-2">
             <a
-              href="https://flux1.dev"
+              href="https://fal.ai/models/fal-ai/flux-lora/playground"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline font-medium text-xs"
             >
-              Powered by Flux 1 Dev
+              Flux LoRA (Inference)
             </a>
             <span className="text-gray-500 text-xs">|</span>
             <a
-              href="https://fal.ai/flux-lora-fast-training"
+              href="https://fal.ai/models/fal-ai/flux-lora-fast-training/playground"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline font-medium text-xs"
@@ -262,7 +271,6 @@ export default function Home() {
               setTrainedModel={handleSetTrainedModel}
               trainedModel={selectedModel}
               trainedModels={trainedModels}
-              setTrainedModels={setTrainedModels}
             />
           )}
           {activeTab === "generation" && (
@@ -272,13 +280,14 @@ export default function Home() {
               setSelectedModel={setSelectedModel}
               generatedContent={generatedContent}
               addGeneratedContent={handleAddGeneratedContent}
+              removeGeneratedContent={handleRemoveGeneratedContent}
             />
           )}
         </div>
 
         {/* Detailed Model Info */}
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-8">
-          <ModelInfo variant="detailed" />
+          <ModelInfo />
         </div>
       </main>
     </div>
