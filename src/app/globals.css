@@ -1,0 +1,540 @@
+@import "tailwindcss";
+
+:root {
+  --ice-cold: #a0d2eb;
+  --freeze-purple: #e5eaf5;
+  --medium-purple: #d0bdf4;
+  --purple-pain: #8458b3;
+  --heavy-purple: #a28089;
+
+  --background: var(--freeze-purple);
+  --foreground: var(--heavy-purple);
+
+  --accent-light: var(--ice-cold);
+  --accent-medium: var(--medium-purple);
+  --accent-main: var(--purple-pain);
+  --accent-dark: var(--heavy-purple);
+
+  /* Main accent colors */
+  --main-yellow: #fbc93d;
+  --main-blue: #6cc0e5;
+  --main-red: #fb4f4f;
+
+  /* Card and glass backgrounds */
+  --card-bg: #fff;
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: #e0e0e0;
+  --glass-dark-bg: rgba(108, 192, 229, 0.92); /* blue tint for dark glass */
+  --glass-dark-border: #6cc0e5;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* Custom purple color palette */
+  --primary-blue: #6cc0e5; /* Updated to use main blue */
+  --primary-purple: #8b5cf6;
+  --primary-pink: #ec4899;
+  --primary-cyan: #06b6d4;
+  --primary-emerald: #10b981;
+
+  /* Gradient colors - updated to incorporate main blue */
+  --gradient-1-start: #6cc0e5;
+  --gradient-1-end: #4facfe;
+  --gradient-2-start: #6cc0e5;
+  --gradient-2-end: #667eea;
+  --gradient-3-start: #6cc0e5;
+  --gradient-3-end: #00f2fe;
+  --gradient-4-start: #6cc0e5;
+  --gradient-4-end: #38f9d7;
+  --gradient-5-start: #6cc0e5;
+  --gradient-5-end: #fee140;
+
+  /* Dark theme colors */
+  --dark-bg-primary: #0f0f23;
+  --dark-bg-secondary: #1a1a2e;
+  --dark-bg-tertiary: #16213e;
+  --dark-accent: #6cc0e5; /* Updated to use main blue */
+  --dark-text-primary: #f8fafc;
+  --dark-text-secondary: #cbd5e1;
+  --dark-text-muted: #64748b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #22223b;
+    --foreground: #fff;
+    --card-bg: #23234a;
+    --glass-bg: rgba(34, 34, 59, 0.96);
+    --glass-border: #333366;
+    --glass-dark-bg: rgba(108, 192, 229, 0.92);
+    --glass-dark-border: #6cc0e5;
+  }
+}
+
+body {
+  background: linear-gradient(to right, #141e30, #243b55); /* Updated gradient background */
+  color: #ffffff; /* White text for maximum contrast */
+  font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 1.08rem; /* Slightly larger base font */
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #f8fafc; /* Very light for max contrast on dark bg */
+  }
+}
+
+/* Main background - now using consistent dark theme */
+.main-gradient-bg {
+  background: linear-gradient(to right, #141e30, #243b55); /* Updated gradient background */
+  min-height: 100vh;
+  color: #ffffff; /* Ensure white text on dark background */
+}
+
+/* Card and glass backgrounds for high contrast */
+.card-gradient {
+  background: var(--freeze-purple);
+  color: #18181b; /* High contrast text */
+  border: 2px solid var(--medium-purple);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(132, 88, 179, 0.08);
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.card-gradient.dark {
+  background: var(--purple-pain);
+  color: #f8fafc; /* High contrast text for dark cards */
+  border: 2px solid var(--medium-purple);
+}
+
+.glass-main {
+  background: rgba(132, 88, 179, 0.85);
+  color: #ffffff; /* White text for maximum contrast */
+  border: 2px solid var(--medium-purple);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(132, 88, 179, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.glass-main-dark {
+  background: rgba(132, 88, 179, 0.85);
+  color: #f8fafc; /* High contrast text for dark cards */
+  border: 2px solid var(--medium-purple);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(132, 88, 179, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+/* Text gradients for headings */
+.text-gradient-main {
+  background: linear-gradient(90deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+  color: #ffffff; /* Fallback for browsers that don't support text gradients */
+}
+
+/* Button styles for high contrast and main colors */
+.btn-main-light {
+  background: var(--ice-cold);
+  color: #18181b !important; /* High contrast for all buttons */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-main-light:hover {
+  background: var(--freeze-purple);
+}
+
+.btn-main-medium {
+  background: var(--medium-purple);
+  color: #18181b !important; /* High contrast for all buttons */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-main-medium:hover {
+  background: var(--purple-pain);
+  color: #fff !important; /* For dark buttons, use white text */
+}
+
+.btn-main-dark {
+  background: var(--purple-pain);
+  color: #fff !important; /* For dark buttons, use white text */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-main-dark:hover {
+  background: var(--heavy-purple);
+}
+
+/* Tab styles for high contrast and main colors */
+.tab-btn {
+  color: #18181b;
+  background: var(--freeze-purple);
+  border: 2px solid var(--medium-purple);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: linear-gradient(
+    90deg,
+    var(--ice-cold) 0%,
+    var(--medium-purple) 60%,
+    var(--purple-pain) 100%
+  );
+  color: #fff;
+  border-color: var(--purple-pain);
+  box-shadow: 0 2px 8px rgba(132, 88, 179, 0.15);
+  transform: scale(1.05);
+}
+.tab-btn:not(.active):hover {
+  background: var(--ice-cold);
+  color: var(--purple-pain);
+  border-color: var(--medium-purple);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--freeze-purple);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    90deg,
+    var(--ice-cold) 0%,
+    var(--purple-pain) 100%
+  );
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    90deg,
+    var(--purple-pain) 0%,
+    var(--ice-cold) 100%
+  );
+}
+
+/* Custom purple gradient background */
+.purple-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    var(--ice-cold) 0%,
+    var(--freeze-purple) 25%,
+    var(--medium-purple) 50%,
+    var(--purple-pain) 75%,
+    var(--heavy-purple) 100%
+  );
+  min-height: 100vh;
+}
+
+/* Alternative gradient directions */
+.purple-gradient-radial {
+  background: radial-gradient(
+    circle at center,
+    var(--ice-cold) 0%,
+    var(--freeze-purple) 30%,
+    var(--medium-purple) 60%,
+    var(--purple-pain) 85%,
+    var(--heavy-purple) 100%
+  );
+  min-height: 100vh;
+}
+
+.purple-gradient-vertical {
+  background: linear-gradient(
+    180deg,
+    var(--ice-cold) 0%,
+    var(--freeze-purple) 25%,
+    var(--medium-purple) 50%,
+    var(--purple-pain) 75%,
+    var(--heavy-purple) 100%
+  );
+  min-height: 100vh;
+}
+
+/* Beautiful gradient backgrounds */
+.gradient-bg-primary {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-1-start) 0%,
+    var(--gradient-1-end) 100%
+  );
+}
+
+.gradient-bg-secondary {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-2-start) 0%,
+    var(--gradient-2-end) 100%
+  );
+}
+
+.gradient-bg-cyan {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-3-start) 0%,
+    var(--gradient-3-end) 100%
+  );
+}
+
+.gradient-bg-emerald {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-4-start) 0%,
+    var(--gradient-4-end) 100%
+  );
+}
+
+.gradient-bg-sunset {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-5-start) 0%,
+    var(--gradient-5-end) 100%
+  );
+}
+
+/* Cosmic background with stars effect */
+.cosmic-bg {
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  position: relative;
+}
+
+.cosmic-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(
+      1px 1px at 130px 80px,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    ),
+    radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: twinkle 4s ease-in-out infinite;
+  opacity: 0.3;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+/* Enhanced glass for purple theme */
+.glass-purple {
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  color: #18181b; /* High contrast text */
+}
+
+.glass-purple-dark {
+  background: var(--glass-dark-bg);
+  border: 1.5px solid var(--glass-dark-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  color: #f8fafc; /* High contrast text for dark cards */
+  backdrop-filter: blur(8px);
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--purple-pain) 0%,
+    var(--heavy-purple) 100%
+  );
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(132, 88, 179, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(
+    135deg,
+    var(--heavy-purple) 0%,
+    var(--purple-pain) 100%
+  );
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(132, 88, 179, 0.4);
+}
+
+/* Text gradient effects */
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--purple-pain) 0%,
+    var(--heavy-purple) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(
+    135deg,
+    var(--purple-pain) 0%,
+    var(--heavy-purple) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-sunset {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-5-start) 0%,
+    var(--gradient-5-end) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Accent background utilities */
+.bg-accent-yellow {
+  background-color: var(--main-yellow) !important;
+}
+.bg-accent-blue {
+  background-color: var(--main-blue) !important;
+}
+.bg-accent-red {
+  background-color: var(--main-red) !important;
+}
+
+/* Accent text utilities */
+.text-accent-yellow,
+.text-accent-blue,
+.text-accent-red {
+  color: #ffffff !important; /* White text for consistent dark theme */
+}
+
+/* Accent button styles */
+.btn-accent-yellow {
+  background: var(--main-yellow);
+  color: #18181b !important; /* High contrast for all buttons */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+}
+.btn-accent-yellow:hover {
+  background: #ffd86b;
+}
+
+.btn-accent-blue {
+  background: var(--main-blue);
+  color: #18181b !important; /* High contrast for all buttons */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+}
+.btn-accent-blue:hover {
+  background: #8ed6f7;
+}
+
+.btn-accent-red {
+  background: var(--main-red);
+  color: #18181b !important; /* High contrast for all buttons */
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 12px 24px;
+  transition: all 0.2s;
+}
+.btn-accent-red:hover {
+  background: #ff7a7a;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #ffffff; /* White text for consistent dark theme */
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+@media (prefers-color-scheme: dark) {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #f8fafc;
+  }
+}
+
+.text-gradient,
+.text-gradient-main,
+.text-gradient-purple,
+.text-gradient-sunset {
+  /* Restrict gradients to headings only for readability */
+  font-weight: 800;
+  font-size: 2.2rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
