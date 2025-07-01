@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, Brain, Image as ImageIcon, Trash2 } from "lucide-react";
-import { DataPreparation } from "@/components/DataPreparation";
-import { ModelTraining } from "@/components/ModelTraining";
-import { ImageGeneration } from "@/components/ImageGeneration";
-import { ModelInfo } from "@/components/ModelInfo";
+import { Trash2 } from "lucide-react";
+import { TrainingDataUpload } from "@/components/TrainingDataUpload";
+import { LoRATraining } from "@/components/LoRATraining";
+import { ContentGeneration } from "@/components/ContentGeneration";
 import {
   saveTrainingData,
   loadTrainingData,
@@ -19,7 +18,7 @@ import {
   TrainingDataItem,
   TrainedModel,
   GeneratedContent,
-} from "@/lib/client-storage";
+} from "@/lib/localStorage";
 import { TabType } from "@/lib/types";
 import {
   TAB_CONFIGS,
@@ -252,13 +251,13 @@ export function Home() {
         {/* Tab Content */}
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
           {activeTab === "data" && (
-            <DataPreparation
+            <TrainingDataUpload
               trainingData={trainingData}
               setTrainingData={setTrainingData}
             />
           )}
           {activeTab === "training" && (
-            <ModelTraining
+            <LoRATraining
               trainingData={trainingData}
               setTrainedModel={handleSetTrainedModel}
               trainedModel={selectedModel}
@@ -266,7 +265,7 @@ export function Home() {
             />
           )}
           {activeTab === "generation" && (
-            <ImageGeneration
+            <ContentGeneration
               trainedModel={selectedModel}
               trainedModels={trainedModels}
               setSelectedModel={setSelectedModel}
@@ -275,11 +274,6 @@ export function Home() {
               removeGeneratedContent={handleRemoveGeneratedContent}
             />
           )}
-        </div>
-
-        {/* Detailed Model Info */}
-        <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-8">
-          <ModelInfo />
         </div>
       </main>
     </div>

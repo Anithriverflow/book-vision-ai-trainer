@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
-import { TrainedModel, GeneratedContent } from "@/lib/client-storage";
+import { TrainedModel, GeneratedContent } from "@/lib/localStorage";
 import {
   ImageGenerationProps,
   GenerationConfig,
@@ -26,7 +26,7 @@ import {
   SAMPLE_PROMPTS,
 } from "@/lib/constants";
 
-export function ImageGeneration({
+export function ContentGeneration({
   trainedModel,
   trainedModels,
   setSelectedModel,

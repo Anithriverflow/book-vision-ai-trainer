@@ -226,6 +226,10 @@ export const ERROR_MESSAGES = {
   PROMPT_TOO_SHORT: "Prompt must be at least 5 characters long",
   PROMPT_TOO_LONG: "Prompt must be less than 1000 characters",
   NEGATIVE_PROMPT_TOO_LONG: "Negative prompt must be less than 500 characters",
+  MISSING_PARAMETERS: "Missing required parameters",
+  INVALID_IMAGE_FORMAT: "Invalid image format for image",
+  TRAINING_FAILED: "Training failed",
+  GENERATION_FAILED: "Generation failed",
 };
 
 // Success messages
@@ -240,6 +244,13 @@ export const SUCCESS_MESSAGES = {
 export const CONFIRMATION_MESSAGES = {
   clearAllData:
     "Are you sure you want to clear all data? This action cannot be undone.",
+};
+
+// Combined messages object for API routes
+export const MESSAGES = {
+  ...ERROR_MESSAGES,
+  ...SUCCESS_MESSAGES,
+  ...CONFIRMATION_MESSAGES,
 };
 
 // ============================================================================

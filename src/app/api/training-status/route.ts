@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { falInstance } from "@/lib/fal-config";
+import { falInstance } from "@/lib/falClient";
 
 export async function GET(request: NextRequest) {
   try {

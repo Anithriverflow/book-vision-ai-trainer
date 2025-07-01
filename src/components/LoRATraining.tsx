@@ -12,11 +12,10 @@ import {
 } from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
 import {
-  TrainingDataItem,
   TrainedModel,
   saveCurrentTraining,
   loadCurrentTraining,
-} from "@/lib/client-storage";
+} from "@/lib/localStorage";
 import {
   ModelTrainingProps,
   TrainingConfig,
@@ -31,7 +30,7 @@ import {
   SUCCESS_MESSAGES,
 } from "@/lib/constants";
 
-export function ModelTraining({
+export function LoRATraining({
   trainingData,
   setTrainedModel,
   trainedModel,

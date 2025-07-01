@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { falInstance } from "@/lib/fal-config";
+import { falInstance } from "@/lib/falClient";
 import JSZip from "jszip";
 import { FluxLoraTrainingInput } from "@/lib/types";
 

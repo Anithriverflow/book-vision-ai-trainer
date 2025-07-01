@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { falInstance } from "@/lib/fal-config";
+import { falInstance } from "@/lib/falClient";
 import { FluxVideoResult } from "@/lib/types";
 
 export async function POST(request: NextRequest) {

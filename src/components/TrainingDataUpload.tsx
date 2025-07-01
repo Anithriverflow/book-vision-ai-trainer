@@ -2,11 +2,11 @@
 
 import { useState, useRef } from "react";
 import { Upload, Trash2 } from "lucide-react";
-import { TrainingDataItem } from "@/lib/client-storage";
+import { TrainingDataItem } from "@/lib/localStorage";
 import { DataPreparationProps } from "@/lib/types";
 import { UI_CONSTANTS, VALIDATION } from "@/lib/constants";
 
-export function DataPreparation({
+export function TrainingDataUpload({
   trainingData,
   setTrainingData,
 }: DataPreparationProps) {
