@@ -1,4 +1,6 @@
-export const FAL_MODELS = {
+import { FalModel } from "./types";
+
+export const FAL_MODELS: Record<string, FalModel> = {
   /* FLUX_1_DEV: Used for content generation (images and videos) with trained LoRA models */
   FLUX_1_DEV: {
     name: "Flux LoRA (Inference)",
@@ -29,7 +31,9 @@ export const FAL_MODELS = {
   },
 } as const;
 
-export const FAL_AI_INFO = {
+import { FalAiInfo } from "./types";
+
+export const FAL_AI_INFO: FalAiInfo = {
   name: "Fal AI",
   url: "https://fal.ai",
   description: "Real-time AI inference platform",

@@ -14,41 +14,19 @@ import {
 } from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
 import { TrainedModel, GeneratedContent } from "@/lib/client-storage";
+import {
+  ImageGenerationProps,
+  GenerationConfig,
+  GeneratedContentResult,
+} from "@/lib/types";
+import {
+  GENERATION_CONSTANTS,
+  DEFAULT_GENERATION_CONFIG,
+  VALIDATION,
+  SAMPLE_PROMPTS,
+} from "@/lib/constants";
 
-type ImageGenerationProps = {
-  trainedModel: TrainedModel | null;
-  trainedModels: TrainedModel[];
-  setSelectedModel: (model: TrainedModel | null) => void;
-  generatedContent: GeneratedContent[];
-  addGeneratedContent: (content: GeneratedContent) => void;
-  removeGeneratedContent: (id: string) => void;
-};
-
-type GenerationConfig = {
-  prompt: string;
-  negativePrompt: string;
-  steps: number;
-  guidanceScale: number;
-  width: number;
-  height: number;
-  seed: number;
-  type: "image" | "video";
-};
-
-type GeneratedContentResult = {
-  success: boolean;
-  type: "image" | "video";
-  images?: { url: string; content_type?: string }[];
-  video?: {
-    url: string;
-    duration: number;
-    fps: number;
-  };
-  seed: number;
-  prompt: string;
-};
-
-export default function ImageGeneration({
+export function ImageGeneration({
   trainedModel,
   trainedModels,
   setSelectedModel,
@@ -63,21 +41,15 @@ export default function ImageGeneration({
   const [config, setConfig] = useState<GenerationConfig>({
     prompt: "",
     negativePrompt: "blurry, low quality, distorted, deformed",
-    steps: 20,
-    guidanceScale: 7.5,
-    width: 512,
-    height: 512,
-    seed: -1,
+    steps: DEFAULT_GENERATION_CONFIG.steps,
+    guidanceScale: DEFAULT_GENERATION_CONFIG.guidanceScale,
+    width: DEFAULT_GENERATION_CONFIG.width,
+    height: DEFAULT_GENERATION_CONFIG.height,
+    seed: DEFAULT_GENERATION_CONFIG.seed,
     type: "image",
   });
 
-  const samplePrompts = [
-    "Ye Wenjie standing on a hilltop overlooking the Red Coast Base, dramatic lighting, cinematic composition",
-    "Luo Ji in a dimly lit library surrounded by ancient books, mysterious atmosphere",
-    "The Trisolaran fleet approaching Earth, space scene with stars, sci-fi aesthetic",
-    "A character in a futuristic control room with holographic displays, neon lighting",
-    "A dramatic scene from the Cultural Revolution, historical setting, emotional intensity",
-  ];
+  const samplePrompts = SAMPLE_PROMPTS;
 
   const setSamplePrompt = (prompt: string) => {
     setConfig({ ...config, prompt });

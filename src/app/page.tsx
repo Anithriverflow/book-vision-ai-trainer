@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { BookOpen, Brain, Image as ImageIcon, Trash2 } from "lucide-react";
-import DataPreparation from "@/components/DataPreparation";
-import ModelTraining from "@/components/ModelTraining";
-import ImageGeneration from "@/components/ImageGeneration";
-import ModelInfo from "@/components/ModelInfo";
+import { DataPreparation } from "@/components/DataPreparation";
+import { ModelTraining } from "@/components/ModelTraining";
+import { ImageGeneration } from "@/components/ImageGeneration";
+import { ModelInfo } from "@/components/ModelInfo";
 import {
   saveTrainingData,
   loadTrainingData,
@@ -20,10 +20,16 @@ import {
   TrainedModel,
   GeneratedContent,
 } from "@/lib/client-storage";
+import { TabType } from "@/lib/types";
+import {
+  TAB_CONFIGS,
+  APP_METADATA,
+  EXTERNAL_LINKS,
+  UI_CONSTANTS,
+  CONFIRMATION_MESSAGES,
+} from "@/lib/constants";
 
-type TabType = "data" | "training" | "generation";
-
-export default function Home() {
+export function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("data");
   const [trainingData, setTrainingData] = useState<TrainingDataItem[]>([]);
   const [trainedModels, setTrainedModels] = useState<TrainedModel[]>([]);
@@ -115,11 +121,7 @@ export default function Home() {
   };
 
   const handleClearAllData = () => {
-    if (
-      confirm(
-        "Are you sure you want to clear all data? This action cannot be undone."
-      )
-    ) {
+    if (confirm(CONFIRMATION_MESSAGES.clearAllData)) {
       clearAllData();
       setTrainingData([]);
       setTrainedModels([]);
@@ -129,33 +131,16 @@ export default function Home() {
     }
   };
 
-  const tabs = [
-    {
-      id: "data" as TabType,
-      label: "Prepare Data",
-      icon: BookOpen,
-      description: "Upload images and add descriptions",
-    },
-    {
-      id: "training" as TabType,
-      label: "Train Model",
-      icon: Brain,
-      description: "Train your LoRA model",
-    },
-    {
-      id: "generation" as TabType,
-      label: "Generate",
-      icon: ImageIcon,
-      description: "Create images and videos",
-    },
-  ];
+  const tabs = TAB_CONFIGS;
 
   if (isLoading) {
     return (
       <div className="min-h-screen main-gradient-bg text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
-          <p className="text-gray-300">Loading your data...</p>
+          <div
+            className={`animate-spin rounded-full h-${UI_CONSTANTS.loadingSpinnerSize} w-${UI_CONSTANTS.loadingSpinnerSize} border-b-2 border-blue-400 mx-auto mb-4`}
+          ></div>
+          <p className="text-gray-300">{UI_CONSTANTS.loadingMessage}</p>
         </div>
       </div>
     );
@@ -163,31 +148,32 @@ export default function Home() {
 
   return (
     <div className="min-h-screen main-gradient-bg text-white">
-      <main className="max-w-6xl mx-auto p-8 space-y-8">
+      <main
+        className={`${UI_CONSTANTS.maxWidth} mx-auto ${UI_CONSTANTS.defaultPadding} ${UI_CONSTANTS.defaultSpacing}`}
+      >
         {/* Header */}
-        <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-b from-gray-900 to-gray-800 rounded-xl shadow-lg mb-6">
+        <div
+          className={`flex flex-col items-center justify-center ${UI_CONSTANTS.headerGradient} rounded-xl shadow-lg mb-6`}
+        >
           <div className="flex items-center space-x-4 mb-2">
             <img
-              src="/5446441-200.png"
-              alt="Book Vision AI"
+              src={APP_METADATA.logo}
+              alt={APP_METADATA.name}
               className="w-6 h-6 brightness-0 invert"
             />
             <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent tracking-tight">
-              Book Vision AI
+              {APP_METADATA.name}
             </h1>
           </div>
           <p className="max-w-xl text-base md:text-lg text-gray-300 text-center mb-2">
-            Create your own AI model trained on your favorite book artwork!
-            Upload 10-20 of your favorite character illustrations, scene
-            depictions, and artwork from books.
+            {APP_METADATA.description}
           </p>
           <p className="max-w-lg text-sm text-gray-400 text-center">
-            Train a custom LoRA model, then generate unlimited images of
-            characters, scenes, and settings from your favorite stories!
+            {APP_METADATA.tagline}
           </p>
           <div className="mt-3 flex space-x-2">
             <a
-              href="https://fal.ai/models/fal-ai/flux-lora/playground"
+              href={EXTERNAL_LINKS.fluxLoraInference}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline font-medium text-xs"
@@ -196,7 +182,7 @@ export default function Home() {
             </a>
             <span className="text-gray-500 text-xs">|</span>
             <a
-              href="https://fal.ai/models/fal-ai/flux-lora-fast-training/playground"
+              href={EXTERNAL_LINKS.fluxLoraTraining}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline font-medium text-xs"
@@ -299,3 +285,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;

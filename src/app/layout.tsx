@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "Train AI models on your favorite books and generate stunning visualizations using Fal AI's Flux models.",
 };
 
-export default function RootLayout({
+function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -37,3 +37,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+export default RootLayout;

@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { falInstance } from "@/lib/fal-config";
 import JSZip from "jszip";
-
-// Define the training input type based on fal.ai API
-type FluxLoraTrainingInput = {
-  images_data_url: string;
-  trigger_word?: string;
-  create_masks?: boolean;
-  steps: number;
-  is_style?: boolean;
-  is_input_format_already_preprocessed?: boolean;
-  data_archive_format?: string;
-};
+import { FluxLoraTrainingInput } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,47 +1,11 @@
-export interface TrainingDataItem {
-  id: string;
-  image: File;
-  imageUrl: string;
-  description: string;
-}
+import {
+  TrainingDataItem,
+  TrainedModel,
+  GeneratedContent,
+  UIState,
+} from "./types";
 
-export interface TrainedModel {
-  modelName: string;
-  modelId: string;
-  loraId: string;
-  trainingConfig: {
-    epochs: number;
-    learningRate: number;
-    batchSize: number;
-    resolution: number;
-    imageCount: number;
-  };
-  status: string;
-  createdAt: string;
-  trainingData: TrainingDataItem[];
-}
-
-export interface GeneratedContent {
-  id: string;
-  type: "image" | "video";
-  url: string;
-  prompt: string;
-  negativePrompt: string;
-  config: {
-    steps: number;
-    guidanceScale: number;
-    width: number;
-    height: number;
-    seed: number;
-  };
-  modelId: string;
-  createdAt: string;
-  filename: string;
-}
-
-export interface UIState {
-  [key: string]: unknown;
-}
+export type { TrainingDataItem, TrainedModel, GeneratedContent, UIState };
 
 // Simple localStorage wrapper functions
 export const saveTrainingData = (data: TrainingDataItem[]) => {

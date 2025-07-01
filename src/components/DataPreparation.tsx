@@ -3,13 +3,10 @@
 import { useState, useRef } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { TrainingDataItem } from "@/lib/client-storage";
+import { DataPreparationProps } from "@/lib/types";
+import { UI_CONSTANTS, VALIDATION } from "@/lib/constants";
 
-type DataPreparationProps = {
-  trainingData: TrainingDataItem[];
-  setTrainingData: (data: TrainingDataItem[]) => void;
-};
-
-export default function DataPreparation({
+export function DataPreparation({
   trainingData,
   setTrainingData,
 }: DataPreparationProps) {
@@ -91,7 +88,7 @@ export default function DataPreparation({
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*"
+          accept={UI_CONSTANTS.ALLOWED_IMAGE_TYPES.join(",")}
           onChange={handleFileUpload}
           className="hidden"
         />
@@ -101,11 +98,13 @@ export default function DataPreparation({
           className="flex items-center justify-center space-x-2 mx-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 transition-colors cursor-pointer"
         >
           <Upload size={20} />
-          <span>{isUploading ? "Uploading..." : "Upload Images"}</span>
+          <span>
+            {isUploading
+              ? UI_CONSTANTS.UPLOADING_TEXT
+              : UI_CONSTANTS.UPLOAD_BUTTON_TEXT}
+          </span>
         </button>
-        <p className="text-gray-400 mt-2">
-          Supported formats: JPG, PNG, WebP (Max 10MB per image)
-        </p>
+        <p className="text-gray-400 mt-2">{UI_CONSTANTS.SUPPORTED_FORMATS}</p>
       </div>
 
       {/* Training Data List */}

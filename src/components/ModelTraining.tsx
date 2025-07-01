@@ -17,38 +17,21 @@ import {
   saveCurrentTraining,
   loadCurrentTraining,
 } from "@/lib/client-storage";
+import {
+  ModelTrainingProps,
+  TrainingConfig,
+  ExternalModelData,
+  TrainingLog,
+} from "@/lib/types";
+import {
+  VALIDATION,
+  TRAINING_CONSTANTS,
+  DEFAULT_TRAINING_CONFIG,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+} from "@/lib/constants";
 
-type ModelTrainingProps = {
-  trainingData: TrainingDataItem[];
-  setTrainedModel: (model: TrainedModel) => void;
-  trainedModel: TrainedModel | null;
-  trainedModels: TrainedModel[];
-};
-
-type TrainingConfig = {
-  modelName: string;
-  epochs: number;
-  learningRate: number;
-  batchSize: number;
-  resolution: number;
-};
-
-type ExternalModelData = {
-  modelName: string;
-  modelId: string;
-  loraId: string;
-  configFileUrl: string;
-  loraFileUrl: string;
-  steps: number;
-  createdAt: string;
-};
-
-type TrainingLog = {
-  message?: string;
-  [key: string]: unknown;
-};
-
-export default function ModelTraining({
+export function ModelTraining({
   trainingData,
   setTrainedModel,
   trainedModel,
@@ -66,10 +49,10 @@ export default function ModelTraining({
   const [importSuccess, setImportSuccess] = useState("");
   const [config, setConfig] = useState<TrainingConfig>({
     modelName: "",
-    epochs: 100,
-    learningRate: 0.0001,
-    batchSize: 1,
-    resolution: 512,
+    epochs: DEFAULT_TRAINING_CONFIG.epochs,
+    learningRate: DEFAULT_TRAINING_CONFIG.learningRate,
+    batchSize: DEFAULT_TRAINING_CONFIG.batchSize,
+    resolution: DEFAULT_TRAINING_CONFIG.resolution,
   });
   const [externalModelData, setExternalModelData] = useState<ExternalModelData>(
     {
@@ -84,9 +67,11 @@ export default function ModelTraining({
   );
 
   const isDataReady =
-    trainingData.length >= 10 &&
+    trainingData.length >= VALIDATION.MIN_EPOCHS &&
     trainingData.every(
-      (item) => item.description && item.description.trim().length > 0
+      (item) =>
+        item.description &&
+        item.description.trim().length >= VALIDATION.MIN_DESCRIPTION_LENGTH
     );
 
   // Check for ongoing training sessions on component mount
@@ -153,7 +138,10 @@ export default function ModelTraining({
               data.model.trainingConfig.epochs *
               data.model.trainingConfig.imageCount *
               2000; // Rough estimate
-            const progress = Math.min((elapsed / estimatedTotal) * 100, 95);
+            const progress = Math.min(
+              (elapsed / estimatedTotal) * 100,
+              TRAINING_CONSTANTS.MAX_PROGRESS
+            );
             setTrainingProgress(progress);
 
             // Update current training model
@@ -164,7 +152,7 @@ export default function ModelTraining({
       } catch (error) {
         console.error("Error polling training status:", error);
       }
-    }, 5000); // Poll every 5 seconds
+    }, TRAINING_CONSTANTS.POLL_INTERVAL); // Poll every 5 seconds
 
     // Cleanup interval on component unmount
     return () => clearInterval(pollInterval);
@@ -172,9 +160,7 @@ export default function ModelTraining({
 
   const startTraining = async () => {
     if (!isDataReady) {
-      setTrainingError(
-        "Please ensure you have at least 10 images with complete, non-empty descriptions."
-      );
+      setTrainingError(ERROR_MESSAGES.DESCRIPTION_TOO_SHORT);
       return;
     }
     if (!config.modelName.trim()) {
