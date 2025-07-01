@@ -7,7 +7,7 @@ import {
 
 export type { TrainingDataItem, TrainedModel, GeneratedContent, UIState };
 
-// Simple localStorage wrapper functions
+// Local storage utilities for persisting app state
 export const saveTrainingData = (data: TrainingDataItem[]) => {
   const serializedData = data.map((item) => ({
     ...item,

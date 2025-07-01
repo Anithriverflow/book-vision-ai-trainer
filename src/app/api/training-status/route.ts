@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { falInstance } from "@/lib/falClient";
 
+// API endpoint for checking the status of ongoing LoRA training jobs
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check the training status with fal.ai queue
+    // Query fal.ai queue for training status
     try {
       const status = await falInstance.queue.status(
         "fal-ai/flux-lora-fast-training",

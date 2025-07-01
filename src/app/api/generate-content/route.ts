@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { falInstance } from "@/lib/falClient";
 import { FluxVideoResult } from "@/lib/types";
 
+// API endpoint for generating images and videos using trained LoRA models
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
             seed: seed === -1 ? undefined : seed,
             loras: [
               {
-                path: loraId, // This should be a public URL to your LoRA weights
+                path: loraId,
                 scale: 0.8,
               },
             ],
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
           seed: seed === -1 ? undefined : seed,
           loras: [
             {
-              path: loraId, // This should be a public URL to your LoRA weights
+              path: loraId,
               scale: 0.8,
             },
           ],

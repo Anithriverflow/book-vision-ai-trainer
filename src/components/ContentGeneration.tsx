@@ -19,12 +19,7 @@ import {
   GenerationConfig,
   GeneratedContentResult,
 } from "@/lib/types";
-import {
-  GENERATION_CONSTANTS,
-  DEFAULT_GENERATION_CONFIG,
-  VALIDATION,
-  SAMPLE_PROMPTS,
-} from "@/lib/constants";
+import { DEFAULT_GENERATION_CONFIG, SAMPLE_PROMPTS } from "@/lib/constants";
 
 export function ContentGeneration({
   trainedModel,

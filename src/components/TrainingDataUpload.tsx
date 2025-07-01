@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { TrainingDataItem } from "@/lib/localStorage";
 import { DataPreparationProps } from "@/lib/types";
-import { UI_CONSTANTS, VALIDATION } from "@/lib/constants";
+import { UI_CONSTANTS } from "@/lib/constants";
 
 export function TrainingDataUpload({
   trainingData,

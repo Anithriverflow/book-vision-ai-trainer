@@ -1,10 +1,3 @@
-// Consolidated types for the entire application
-import { BookOpen, Brain, Image as ImageIcon } from "lucide-react";
-
-// ============================================================================
-// CORE DATA TYPES
-// ============================================================================
-
 export type TrainingDataItem = {
   id: string;
   image: File;
@@ -46,17 +39,12 @@ export type GeneratedContent = {
   filename: string;
 };
 
-// ============================================================================
-// UI AND STATE MANAGEMENT TYPES
-// ============================================================================
-
 export type UIState = {
   [key: string]: unknown;
 };
 
 export type TabType = "data" | "training" | "generation";
 
-// Tab configuration type
 export type TabConfig = {
   id: TabType;
   label: string;
@@ -64,7 +52,6 @@ export type TabConfig = {
   description: string;
 };
 
-// App state management types
 export type AppState = {
   activeTab: TabType;
   trainingData: TrainingDataItem[];
@@ -74,7 +61,6 @@ export type AppState = {
   isLoading: boolean;
 };
 
-// App metadata types
 export type AppMetadata = {
   name: string;
   description: string;
@@ -82,48 +68,41 @@ export type AppMetadata = {
   logo: string;
 };
 
-// External link types
 export type ExternalLink = {
   label: string;
   url: string;
   description?: string;
 };
 
-// Data summary types
 export type DataSummary = {
   trainingImages: number;
   trainedModels: number;
   generatedItems: number;
 };
 
-// Loading state types
 export type LoadingState = {
   isLoading: boolean;
   message?: string;
   progress?: number;
 };
 
-// Error handling types
 export type AppError = {
   message: string;
   code?: string;
   details?: unknown;
 };
 
-// Error state types
 export type ErrorState = {
   hasError: boolean;
   message: string;
   details?: unknown;
 };
 
-// Navigation and routing types
 export type AppNavigation = {
   currentTab: TabType;
   previousTab?: TabType;
 };
 
-// Data persistence types
 export type PersistentData = {
   trainingData: TrainingDataItem[];
   trainedModels: TrainedModel[];
@@ -131,7 +110,6 @@ export type PersistentData = {
   activeTab: TabType;
 };
 
-// Event handler types
 export type AppEventHandlers = {
   setTrainedModel: (model: TrainedModel) => void;
   addGeneratedContent: (content: GeneratedContent) => void;
@@ -139,21 +117,15 @@ export type AppEventHandlers = {
   clearAllData: () => void;
 };
 
-// Component state types
 export type ComponentState = {
   [key: string]: unknown;
 };
 
-// UI interaction types
 export type UIInteraction = {
   type: "click" | "hover" | "focus" | "blur";
   target: string;
   data?: unknown;
 };
-
-// ============================================================================
-// COMPONENT PROP TYPES
-// ============================================================================
 
 export type ModelTrainingProps = {
   trainingData: TrainingDataItem[];
@@ -180,10 +152,6 @@ export type ModelInfoProps = {
   className?: string;
 };
 
-// ============================================================================
-// CONFIGURATION TYPES
-// ============================================================================
-
 export type TrainingConfig = {
   modelName: string;
   epochs: number;
@@ -203,19 +171,11 @@ export type GenerationConfig = {
   type: "image" | "video";
 };
 
-// ============================================================================
-// FORM VALIDATION TYPES
-// ============================================================================
-
 export type FormValidation = {
   isValid: boolean;
   errors: string[];
   warnings?: string[];
 };
-
-// ============================================================================
-// API AND EXTERNAL SERVICE TYPES
-// ============================================================================
 
 export type FluxLoraTrainingInput = {
   images_data_url: string;
@@ -249,10 +209,6 @@ export type GeneratedContentResult = {
   prompt: string;
 };
 
-// ============================================================================
-// TRAINING AND MODEL MANAGEMENT TYPES
-// ============================================================================
-
 export type ExternalModelData = {
   modelName: string;
   modelId: string;
@@ -267,10 +223,6 @@ export type TrainingLog = {
   message?: string;
   [key: string]: unknown;
 };
-
-// ============================================================================
-// FAL.AI MODEL CONFIGURATION TYPES
-// ============================================================================
 
 export type FalModel = {
   name: string;

@@ -3,6 +3,7 @@ import { falInstance } from "@/lib/falClient";
 import JSZip from "jszip";
 import { FluxLoraTrainingInput } from "@/lib/types";
 
+// API endpoint for training custom LoRA models on user-uploaded images
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a zip archive of images and captions
+    // Package training data into zip archive
     const zip = new JSZip();
     for (let i = 0; i < imageCount; i++) {
       const imageUrl = formData.get(`image_url_${i}`) as string;
@@ -50,11 +51,11 @@ export async function POST(request: NextRequest) {
     }
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
-    // Upload the zip to fal storage using the configured instance
+    // Upload training data to fal.ai storage
     const blob = new Blob([zipBuffer], { type: "application/zip" });
     const images_data_url = await falInstance.storage.upload(blob);
 
-    // Start LoRA training using the queue system
+    // Submit training job to fal.ai queue
     const trainingInput: FluxLoraTrainingInput = {
       images_data_url,
       steps: epochs * imageCount, // Convert epochs to steps
@@ -69,7 +70,6 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Return training result with model information for client to store
     return NextResponse.json({
       success: true,
       modelName: modelName,

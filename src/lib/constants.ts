@@ -1,12 +1,6 @@
-// Consolidated constants for the entire application
 import { BookOpen, Brain, Image as ImageIcon } from "lucide-react";
 import { FalModel, FalAiInfo, TabType } from "./types";
 
-// ============================================================================
-// APP-LEVEL CONSTANTS
-// ============================================================================
-
-// Tab configurations
 export const TAB_CONFIGS = [
   {
     id: "data" as TabType,
@@ -28,7 +22,6 @@ export const TAB_CONFIGS = [
   },
 ];
 
-// App metadata
 export const APP_METADATA = {
   name: "Book Vision AI",
   description:
@@ -38,17 +31,12 @@ export const APP_METADATA = {
   logo: "/5446441-200.png",
 };
 
-// External links
 export const EXTERNAL_LINKS = {
   fluxLoraInference: "https://fal.ai/models/fal-ai/flux-lora/playground",
   fluxLoraTraining:
     "https://fal.ai/models/fal-ai/flux-lora-fast-training/playground",
   falAi: "https://fal.ai",
 };
-
-// ============================================================================
-// UI CONSTANTS
-// ============================================================================
 
 export const UI_CONSTANTS = {
   maxWidth: "max-w-6xl",
@@ -67,7 +55,6 @@ export const UI_CONSTANTS = {
     success: "text-green-400",
     warning: "text-purple-400",
   },
-  // Component-specific UI constants
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
   ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/webp"],
   UPLOAD_BUTTON_TEXT: "Upload Images",
@@ -76,10 +63,6 @@ export const UI_CONSTANTS = {
   PROGRESS_BAR_HEIGHT: "h-2",
   SPINNER_SIZE: 12,
 };
-
-// ============================================================================
-// VALIDATION CONSTANTS
-// ============================================================================
 
 export const VALIDATION = {
   MIN_DESCRIPTION_LENGTH: 10,
@@ -99,10 +82,6 @@ export const VALIDATION = {
   MAX_NEGATIVE_PROMPT_LENGTH: 500,
 };
 
-// ============================================================================
-// TRAINING CONSTANTS
-// ============================================================================
-
 export const TRAINING_CONSTANTS = {
   POLL_INTERVAL: 5000, // 5 seconds
   MAX_POLL_ATTEMPTS: 360, // 30 minutes
@@ -111,17 +90,12 @@ export const TRAINING_CONSTANTS = {
   MAX_PROGRESS: 95, // Maximum progress percentage
 };
 
-// Default configuration values
 export const DEFAULT_TRAINING_CONFIG = {
   epochs: 10,
   learningRate: 0.0001,
   batchSize: 1,
   resolution: 512,
 };
-
-// ============================================================================
-// GENERATION CONSTANTS
-// ============================================================================
 
 export const GENERATION_CONSTANTS = {
   MAX_PROMPT_LENGTH: 1000,
@@ -140,7 +114,6 @@ export const DEFAULT_GENERATION_CONFIG = {
   loraScale: 0.8,
 };
 
-// Sample prompts for image generation
 export const SAMPLE_PROMPTS = [
   "A majestic dragon soaring over a medieval castle, fantasy art style",
   "A brave knight in shining armor standing in a mystical forest",
@@ -151,10 +124,6 @@ export const SAMPLE_PROMPTS = [
   "A gentle fairy tending to enchanted plants in a hidden grove",
   "A powerful king sitting on a throne made of crystal and gold",
 ];
-
-// ============================================================================
-// FAL.AI MODEL CONFIGURATIONS
-// ============================================================================
 
 export const FAL_MODELS: Record<string, FalModel> = {
   /* FLUX_1_DEV: Used for content generation (images and videos) with trained LoRA models */
@@ -194,10 +163,6 @@ export const FAL_AI_INFO: FalAiInfo = {
   tagline: "Powered by Fal AI",
 } as const;
 
-// ============================================================================
-// STORAGE KEYS
-// ============================================================================
-
 export const STORAGE_KEYS = {
   TRAINING_DATA: "book-vision-training-data",
   TRAINED_MODELS: "book-vision-trained-models",
@@ -206,11 +171,6 @@ export const STORAGE_KEYS = {
   CURRENT_TRAINING: "book-vision-current-training",
 } as const;
 
-// ============================================================================
-// MESSAGES
-// ============================================================================
-
-// Error messages
 export const ERROR_MESSAGES = {
   FILE_TOO_LARGE: "File size exceeds 10MB limit",
   INVALID_FILE_TYPE:
@@ -232,7 +192,6 @@ export const ERROR_MESSAGES = {
   GENERATION_FAILED: "Generation failed",
 };
 
-// Success messages
 export const SUCCESS_MESSAGES = {
   TRAINING_STARTED: "Training started successfully!",
   MODEL_IMPORTED: "Model imported successfully!",
@@ -240,42 +199,33 @@ export const SUCCESS_MESSAGES = {
   DATA_SAVED: "Data saved successfully!",
 };
 
-// Confirmation messages
 export const CONFIRMATION_MESSAGES = {
   clearAllData:
     "Are you sure you want to clear all data? This action cannot be undone.",
 };
 
-// Combined messages object for API routes
 export const MESSAGES = {
   ...ERROR_MESSAGES,
   ...SUCCESS_MESSAGES,
   ...CONFIRMATION_MESSAGES,
 };
 
-// ============================================================================
-// DEFAULT STATES
-// ============================================================================
-
 export const DEFAULT_STATES = {
   activeTab: "data" as TabType,
   isLoading: true,
 };
 
-// Data summary labels
 export const DATA_SUMMARY_LABELS = {
   trainingImages: "Training Images",
   trainedModels: "Trained Models",
   generatedItems: "Generated Items",
 };
 
-// Button labels
 export const BUTTON_LABELS = {
   clearAllData: "Clear All Data",
   loading: "Loading...",
 };
 
-// Layout constants
 export const LAYOUT = {
   minHeight: "min-h-screen",
   containerMaxWidth: "max-w-6xl",
