@@ -14,7 +14,8 @@ import { FAL_MODELS } from "@/lib/models";
 import {
   TrainingDataItem,
   TrainedModel,
-  ClientStorage,
+  saveCurrentTraining,
+  loadCurrentTraining,
 } from "@/lib/client-storage";
 
 type ModelTrainingProps = {
@@ -92,7 +93,7 @@ export default function ModelTraining({
   useEffect(() => {
     const checkOngoingTraining = async () => {
       // First check localStorage for current training
-      const savedCurrentTraining = ClientStorage.loadCurrentTraining();
+      const savedCurrentTraining = loadCurrentTraining();
 
       if (savedCurrentTraining && savedCurrentTraining.status === "training") {
         setCurrentTrainingModel(savedCurrentTraining);
@@ -110,7 +111,7 @@ export default function ModelTraining({
         const latestTrainingModel = trainingModels[trainingModels.length - 1];
         setCurrentTrainingModel(latestTrainingModel);
         setIsTraining(true);
-        ClientStorage.saveCurrentTraining(latestTrainingModel);
+        saveCurrentTraining(latestTrainingModel);
         startStatusPolling(latestTrainingModel.modelId);
       }
     };
@@ -137,7 +138,7 @@ export default function ModelTraining({
             setIsTraining(false);
             setCurrentTrainingModel(null);
             setTrainingProgress(100);
-            ClientStorage.saveCurrentTraining(null);
+            saveCurrentTraining(null);
             clearInterval(pollInterval);
 
             // Update the model in the parent component
@@ -157,7 +158,7 @@ export default function ModelTraining({
 
             // Update current training model
             setCurrentTrainingModel(data.model);
-            ClientStorage.saveCurrentTraining(data.model);
+            saveCurrentTraining(data.model);
           }
         }
       } catch (error) {
@@ -234,7 +235,7 @@ export default function ModelTraining({
 
       setCurrentTrainingModel(newTrainedModel);
       setTrainedModel(newTrainedModel);
-      ClientStorage.saveCurrentTraining(newTrainedModel);
+      saveCurrentTraining(newTrainedModel);
 
       // Start polling for status updates
       startStatusPolling(data.modelId);

@@ -43,160 +43,70 @@ export interface UIState {
   [key: string]: unknown;
 }
 
-// Client-side storage (localStorage)
-export class ClientStorage {
-  private static readonly STORAGE_KEYS = {
-    TRAINING_DATA: "book_vision_training_data",
-    TRAINED_MODELS: "book_vision_trained_models",
-    GENERATED_CONTENT: "book_vision_generated_content",
-    ACTIVE_TAB: "book_vision_active_tab",
-    UI_STATE: "book_vision_ui_state",
-    CURRENT_TRAINING: "book_vision_current_training",
-  };
+// Simple localStorage wrapper functions
+export const saveTrainingData = (data: TrainingDataItem[]) => {
+  const serializedData = data.map((item) => ({
+    ...item,
+    image: {
+      name: item.image.name,
+      size: item.image.size,
+      type: item.image.type,
+      lastModified: item.image.lastModified,
+    },
+  }));
+  localStorage.setItem(
+    "book_vision_training_data",
+    JSON.stringify(serializedData)
+  );
+};
 
-  // Training Data
-  static saveTrainingData(data: TrainingDataItem[]): void {
-    try {
-      // Convert File objects to serializable format
-      const serializedData = data.map((item) => ({
-        ...item,
-        image: {
-          name: item.image.name,
-          size: item.image.size,
-          type: item.image.type,
-          lastModified: item.image.lastModified,
-        },
-      }));
-      localStorage.setItem(
-        this.STORAGE_KEYS.TRAINING_DATA,
-        JSON.stringify(serializedData)
-      );
-    } catch (error) {
-      console.error("Failed to save training data:", error);
-    }
-  }
+export const loadTrainingData = (): TrainingDataItem[] => {
+  const data = localStorage.getItem("book_vision_training_data");
+  return data ? JSON.parse(data) : [];
+};
 
-  static loadTrainingData(): TrainingDataItem[] {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEYS.TRAINING_DATA);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error("Failed to load training data:", error);
-      return [];
-    }
-  }
+export const saveTrainedModels = (models: TrainedModel[]) => {
+  localStorage.setItem("book_vision_trained_models", JSON.stringify(models));
+};
 
-  // Trained Models
-  static saveTrainedModels(models: TrainedModel[]): void {
-    try {
-      localStorage.setItem(
-        this.STORAGE_KEYS.TRAINED_MODELS,
-        JSON.stringify(models)
-      );
-    } catch (error) {
-      console.error("Failed to save trained models:", error);
-    }
-  }
+export const loadTrainedModels = (): TrainedModel[] => {
+  const data = localStorage.getItem("book_vision_trained_models");
+  return data ? JSON.parse(data) : [];
+};
 
-  static loadTrainedModels(): TrainedModel[] {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEYS.TRAINED_MODELS);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error("Failed to load trained models:", error);
-      return [];
-    }
-  }
+export const saveCurrentTraining = (model: TrainedModel | null) => {
+  localStorage.setItem("book_vision_current_training", JSON.stringify(model));
+};
 
-  // Current Training Status
-  static saveCurrentTraining(model: TrainedModel | null): void {
-    try {
-      localStorage.setItem(
-        this.STORAGE_KEYS.CURRENT_TRAINING,
-        JSON.stringify(model)
-      );
-    } catch (error) {
-      console.error("Failed to save current training:", error);
-    }
-  }
+export const loadCurrentTraining = (): TrainedModel | null => {
+  const data = localStorage.getItem("book_vision_current_training");
+  return data ? JSON.parse(data) : null;
+};
 
-  static loadCurrentTraining(): TrainedModel | null {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEYS.CURRENT_TRAINING);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error("Failed to load current training:", error);
-      return null;
-    }
-  }
+export const saveGeneratedContent = (content: GeneratedContent[]) => {
+  localStorage.setItem(
+    "book_vision_generated_content",
+    JSON.stringify(content)
+  );
+};
 
-  // Generated Content
-  static saveGeneratedContent(content: GeneratedContent[]): void {
-    try {
-      localStorage.setItem(
-        this.STORAGE_KEYS.GENERATED_CONTENT,
-        JSON.stringify(content)
-      );
-    } catch (error) {
-      console.error("Failed to save generated content:", error);
-    }
-  }
+export const loadGeneratedContent = (): GeneratedContent[] => {
+  const data = localStorage.getItem("book_vision_generated_content");
+  return data ? JSON.parse(data) : [];
+};
 
-  static loadGeneratedContent(): GeneratedContent[] {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEYS.GENERATED_CONTENT);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error("Failed to load generated content:", error);
-      return [];
-    }
-  }
+export const saveActiveTab = (tab: string) => {
+  localStorage.setItem("book_vision_active_tab", tab);
+};
 
-  // Active Tab
-  static saveActiveTab(tab: string): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEYS.ACTIVE_TAB, tab);
-    } catch (error) {
-      console.error("Failed to save active tab:", error);
-    }
-  }
+export const loadActiveTab = (): string => {
+  return localStorage.getItem("book_vision_active_tab") || "data";
+};
 
-  static loadActiveTab(): string {
-    try {
-      return localStorage.getItem(this.STORAGE_KEYS.ACTIVE_TAB) || "data";
-    } catch (error) {
-      console.error("Failed to load active tab:", error);
-      return "data";
-    }
-  }
-
-  // UI State
-  static saveUIState(state: UIState): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEYS.UI_STATE, JSON.stringify(state));
-    } catch (error) {
-      console.error("Failed to save UI state:", error);
-    }
-  }
-
-  static loadUIState(): UIState {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEYS.UI_STATE);
-      return data ? JSON.parse(data) : {};
-    } catch (error) {
-      console.error("Failed to load UI state:", error);
-      return {};
-    }
-  }
-
-  // Clear all data
-  static clearAllData(): void {
-    try {
-      Object.values(this.STORAGE_KEYS).forEach((key) => {
-        localStorage.removeItem(key);
-      });
-    } catch (error) {
-      console.error("Failed to clear all data:", error);
-    }
-  }
-}
+export const clearAllData = () => {
+  localStorage.removeItem("book_vision_training_data");
+  localStorage.removeItem("book_vision_trained_models");
+  localStorage.removeItem("book_vision_generated_content");
+  localStorage.removeItem("book_vision_active_tab");
+  localStorage.removeItem("book_vision_current_training");
+};

@@ -7,7 +7,15 @@ import ModelTraining from "@/components/ModelTraining";
 import ImageGeneration from "@/components/ImageGeneration";
 import ModelInfo from "@/components/ModelInfo";
 import {
-  ClientStorage,
+  saveTrainingData,
+  loadTrainingData,
+  saveTrainedModels,
+  loadTrainedModels,
+  saveGeneratedContent,
+  loadGeneratedContent,
+  saveActiveTab,
+  loadActiveTab,
+  clearAllData,
   TrainingDataItem,
   TrainedModel,
   GeneratedContent,
@@ -30,10 +38,10 @@ export default function Home() {
     const loadPersistentData = async () => {
       try {
         // Load from localStorage
-        const savedTrainingData = ClientStorage.loadTrainingData();
-        const savedTrainedModels = ClientStorage.loadTrainedModels();
-        const savedGeneratedContent = ClientStorage.loadGeneratedContent();
-        const savedActiveTab = ClientStorage.loadActiveTab() as TabType;
+        const savedTrainingData = loadTrainingData();
+        const savedTrainedModels = loadTrainedModels();
+        const savedGeneratedContent = loadGeneratedContent();
+        const savedActiveTab = loadActiveTab() as TabType;
 
         setTrainingData(savedTrainingData);
         setTrainedModels(savedTrainedModels);
@@ -57,25 +65,25 @@ export default function Home() {
   // Save data whenever it changes
   useEffect(() => {
     if (!isLoading) {
-      ClientStorage.saveTrainingData(trainingData);
+      saveTrainingData(trainingData);
     }
   }, [trainingData, isLoading]);
 
   useEffect(() => {
     if (!isLoading) {
-      ClientStorage.saveTrainedModels(trainedModels);
+      saveTrainedModels(trainedModels);
     }
   }, [trainedModels, isLoading]);
 
   useEffect(() => {
     if (!isLoading) {
-      ClientStorage.saveGeneratedContent(generatedContent);
+      saveGeneratedContent(generatedContent);
     }
   }, [generatedContent, isLoading]);
 
   useEffect(() => {
     if (!isLoading) {
-      ClientStorage.saveActiveTab(activeTab);
+      saveActiveTab(activeTab);
     }
   }, [activeTab, isLoading]);
 
@@ -94,8 +102,6 @@ export default function Home() {
       const updatedModels = [...trainedModels, model];
       setTrainedModels(updatedModels);
     }
-
-
   };
 
   const handleAddGeneratedContent = (content: GeneratedContent) => {
@@ -105,16 +111,16 @@ export default function Home() {
   const handleRemoveGeneratedContent = (id: string) => {
     const updated = generatedContent.filter((item) => item.id !== id);
     setGeneratedContent(updated);
-    ClientStorage.saveGeneratedContent(updated);
+    saveGeneratedContent(updated);
   };
 
-  const clearAllData = () => {
+  const handleClearAllData = () => {
     if (
       confirm(
         "Are you sure you want to clear all data? This action cannot be undone."
       )
     ) {
-      ClientStorage.clearAllData();
+      clearAllData();
       setTrainingData([]);
       setTrainedModels([]);
       setGeneratedContent([]);
@@ -224,7 +230,7 @@ export default function Home() {
               </div>
             </div>
             <button
-              onClick={clearAllData}
+              onClick={handleClearAllData}
               className="flex items-center space-x-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
             >
               <Trash2 size={16} />
