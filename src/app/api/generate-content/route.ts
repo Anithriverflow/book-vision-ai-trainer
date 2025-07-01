@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { falInstance } from "@/lib/fal-config";
 
-interface FluxVideoResult {
+type FluxVideoResult = {
   video: {
     url: string;
     duration: number;
     fps: number;
   };
   seed: number;
-}
+};
 
 export async function POST(request: NextRequest) {
   try {

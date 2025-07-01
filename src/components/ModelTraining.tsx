@@ -11,24 +11,28 @@ import {
   Plus,
 } from "lucide-react";
 import { FAL_MODELS } from "@/lib/models";
-import { TrainingDataItem, TrainedModel, ClientStorage } from "@/lib/client-storage";
+import {
+  TrainingDataItem,
+  TrainedModel,
+  ClientStorage,
+} from "@/lib/client-storage";
 
-interface ModelTrainingProps {
+type ModelTrainingProps = {
   trainingData: TrainingDataItem[];
   setTrainedModel: (model: TrainedModel) => void;
   trainedModel: TrainedModel | null;
   trainedModels: TrainedModel[];
-}
+};
 
-interface TrainingConfig {
+type TrainingConfig = {
   modelName: string;
   epochs: number;
   learningRate: number;
   batchSize: number;
   resolution: number;
-}
+};
 
-interface ExternalModelData {
+type ExternalModelData = {
   modelName: string;
   modelId: string;
   loraId: string;
@@ -36,12 +40,12 @@ interface ExternalModelData {
   loraFileUrl: string;
   steps: number;
   createdAt: string;
-}
+};
 
-interface TrainingLog {
+type TrainingLog = {
   message?: string;
   [key: string]: unknown;
-}
+};
 
 export default function ModelTraining({
   trainingData,

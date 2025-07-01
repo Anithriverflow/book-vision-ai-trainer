@@ -3,9 +3,9 @@
 import { Info, Zap, Brain, Video, Image as ImageIcon } from "lucide-react";
 import { FAL_MODELS, FAL_AI_INFO } from "@/lib/models";
 
-interface ModelInfoProps {
+type ModelInfoProps = {
   className?: string;
-}
+};
 
 export default function ModelInfo({ className = "" }: ModelInfoProps) {
   return (

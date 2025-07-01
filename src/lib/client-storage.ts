@@ -1,4 +1,3 @@
-// Types for persistent data
 export interface TrainingDataItem {
   id: string;
   image: File;

@@ -4,10 +4,10 @@ import { useState, useRef } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { TrainingDataItem } from "@/lib/client-storage";
 
-interface DataPreparationProps {
+type DataPreparationProps = {
   trainingData: TrainingDataItem[];
   setTrainingData: (data: TrainingDataItem[]) => void;
-}
+};
 
 export default function DataPreparation({
   trainingData,

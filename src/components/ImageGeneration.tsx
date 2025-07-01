@@ -15,16 +15,16 @@ import {
 import { FAL_MODELS } from "@/lib/models";
 import { TrainedModel, GeneratedContent } from "@/lib/client-storage";
 
-interface ImageGenerationProps {
+type ImageGenerationProps = {
   trainedModel: TrainedModel | null;
   trainedModels: TrainedModel[];
   setSelectedModel: (model: TrainedModel | null) => void;
   generatedContent: GeneratedContent[];
   addGeneratedContent: (content: GeneratedContent) => void;
   removeGeneratedContent: (id: string) => void;
-}
+};
 
-interface GenerationConfig {
+type GenerationConfig = {
   prompt: string;
   negativePrompt: string;
   steps: number;
@@ -33,9 +33,9 @@ interface GenerationConfig {
   height: number;
   seed: number;
   type: "image" | "video";
-}
+};
 
-interface GeneratedContentResult {
+type GeneratedContentResult = {
   success: boolean;
   type: "image" | "video";
   images?: { url: string; content_type?: string }[];
@@ -46,7 +46,7 @@ interface GeneratedContentResult {
   };
   seed: number;
   prompt: string;
-}
+};
 
 export default function ImageGeneration({
   trainedModel,
